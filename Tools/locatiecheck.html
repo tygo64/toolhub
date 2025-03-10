@@ -85,6 +85,7 @@
             <li><a href="../Tools/leeftijdcalc.html">🖩 Leeftijd Calculator</a></li>
       <li><a href="../Tools/locatiecheck.html">📅 Locatie Berekenen</a></li>
       <li><a href="../Tools/tijdmachine.html">🔢 Tijd Machine</a></li>
+      <li><a href="../Tools/benzine.html">⛽  Benzine</a></li>
         </ul>
     </nav>
 
@@ -203,7 +204,7 @@
             let results = Object.keys(groupedMatches).map(dateKey => {
                 let duration = groupedMatches[dateKey].end - groupedMatches[dateKey].start;
                 return { 
-                    date: dateKey, 
+                    date: formatDate(dateKey), 
                     firstContact: formatTimestamp(groupedMatches[dateKey].firstContact),
                     duration: formatDuration(duration), 
                     coords: `${groupedMatches[dateKey].lat.toFixed(5)}, ${groupedMatches[dateKey].lon.toFixed(5)}` 
@@ -212,6 +213,14 @@
 
             displayResults(results);
             document.getElementById("loading").style.display = "none";
+        }
+
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            const day = String(date.getDate()).padStart(2, '0');
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const year = date.getFullYear();
+            return `${day}-${month}-${year}`;
         }
 
         function displayResults(results) {

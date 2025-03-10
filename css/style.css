@@ -1,10 +1,9 @@
 /* Algemene instellingen */
 body {
     font-family: Arial, sans-serif;
-    margin: 0;
-    padding: 0;
-    display: flex;
-    background-color: #f4f4f4;
+            background-color: #f4f4f4;
+            text-align: center;
+            margin: 50px;
 }
 
 /* Sidebar-menu */
@@ -163,3 +162,29 @@ input {
     padding: 10px;
     border-radius: 4px;
   }
+
+  /* Benzine */
+
+input {
+    width: 80%;
+    padding: 10px;
+    margin: 10px 0;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+button {
+    background: #28a745;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+button:hover {
+    background: #218838;
+}
+#resultaat {
+    margin-top: 20px;
+    font-size: 18px;
+    font-weight: bold;
+}

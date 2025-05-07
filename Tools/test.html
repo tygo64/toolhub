@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Factuur Extractor</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #fdf7e3;
+            margin: 20px;
+            text-align: center;
+        }
+        .container-factuur {
+            max-width: 1200px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            transition: 0.3s;
+        }
+        h2 {
+            color: #4a4a4a;
+        }
+        .dropzone {
+            border: 2px dashed #ff9800;
+            padding: 20px;
+            margin: 10px 0;
+            cursor: pointer;
+            background-color: #fff3e0;
+            border-radius: 10px;
+            transition: 0.3s;
+        }
+        .dropzone:hover {
+            background-color: #ffe0b2;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: left;
+        }
+        th {
+            background-color: #ff9800;
+            color: white;
+        }
+        tr:nth-child(even) {
+            background-color: #fff8e1;
+        }
+        button {
+            background: #ff9800;
+            color: white;
+            border: none;
+            padding: 12px 18px;
+            margin-top: 15px;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: 0.3s;
+        }
+        button:hover {
+            background: #e68900;
+        }
+        #fileInput {
+            display: none;
+        }
+        .warning {
+            color: red;
+            font-weight: bold;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container-factuur">
+        <h2>📄 Factuur PDF Extractor</h2>
+        <label class="dropzone" for="fileInput">Klik of sleep hier meerdere PDF-bestanden</label>
+        <input type="file" id="fileInput" accept="application/pdf" multiple>
+
+        <p class="warning" id="duplicateWarning">⚠️ Deze factuur bestaat al!</p>
+
+        <button onclick="exportCSV()">📥 Exporteer naar CSV</button>
+
+        <h3>Facturen - Technische Unie</h3>
+        <table id="techTable">
+            <thead>
+                <tr>
+                    <th>Bedrijfsnaam</th>
+                    <th>Datum</th>
+                    <th>Klantnummer</th>
+                    <th>Factuurnummer</th>
+                    <th>Totaal excl. BTW</th>
+                    <th>BTW Bedrag</th>
+                    <th>Totaal incl. BTW</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+
+        <h3>Facturen - Warmteservice</h3>
+        <table id="warmteTable">
+            <thead>
+                <tr>
+                    <th>Bedrijfsnaam</th>
+                    <th>Datum</th>
+                    <th>Klantnummer</th>
+                    <th>Factuurnummer</th>
+                    <th>Totaal excl. BTW</th>
+                    <th>BTW Bedrag</th>
+                    <th>Totaal incl. BTW</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+    <script>
+        document.getElementById("fileInput").addEventListener("change", function(event) {
+            const files = event.target.files;
+            if (files.length > 0) {
+                Array.from(files).forEach(file => extractPDFData(file));
+            }
+        });
+
+        async function extractPDFData(file) {
+            const fileReader = new FileReader();
+            fileReader.onload = async function() {
+                const typedarray = new Uint8Array(this.result);
+                const pdf = await pdfjsLib.getDocument({ data: typedarray }).promise;
+                let extractedText = "";
+
+                for (let i = 1; i <= pdf.numPages; i++) {
+                    const page = await pdf.getPage(i);
+                    const textContent = await page.getTextContent();
+                    textContent.items.forEach(item => extractedText += item.str + " ");
+                }
+
+                processExtractedText(extractedText);
+            };
+            fileReader.readAsArrayBuffer(file);
+        }
+
+        function extractCompanyName(text) {
+            if (text.includes("Warmteservice Den Bosch")) {
+                return "Warmteservice Den Bosch";
+            } else if (text.includes("Technische Unie B.V.")) {
+                return "Technische Unie B.V.";
+            }
+            return "Onbekend";
+        }
+
+        function extractInvoiceDetails(text) {
+            const klantMatch = text.match(/Klantnummer\s*(\d+)/i);
+            const factuurMatch = text.match(/Factuurnummer\s*(\d+)/i);
+            const dateMatch = text.match(/\b(\d{1,2}-\d{1,2}-\d{4})\b/);
+            return {
+                klantNummer: klantMatch ? klantMatch[1] : "Niet gevonden",
+                factuurnummer: factuurMatch ? factuurMatch[1] : "Niet gevonden",
+                datum: dateMatch ? dateMatch[1] : "Niet gevonden"
+            };
+        }
+
+        function extractFinancialDetails(text) {
+            const exclBtwMatch = text.match(/Totaal netto goederenwaarde\s*(\d+,\d{2})/i) || text.match(/Totaal excl. btw\s*(\d+,\d{2})/i);
+            const btwMatch = text.match(/21%\s*(\d+,\d{2})/i);
+            const inclBtwMatch = text.match(/Totaal incl. btw\s*EUR\s*(\d+,\d{2})/i) || text.match(/Totaal nog te betalen\s*(\d+,\d{2})/i);
+
+            return {
+                exclBtw: exclBtwMatch ? exclBtwMatch[1].replace(',', '.') : '0.00',
+                btw: btwMatch ? btwMatch[1].replace(',', '.') : '0.00',
+                inclBtw: inclBtwMatch ? inclBtwMatch[1].replace(',', '.') : '0.00'
+            };
+        }
+
+        function processExtractedText(text) {
+            const companyName = extractCompanyName(text);
+            const invoiceDetails = extractInvoiceDetails(text);
+            const financialDetails = extractFinancialDetails(text);
+
+            if (isDuplicateInvoice(invoiceDetails.factuurnummer)) {
+                document.getElementById("duplicateWarning").style.display = "block";
+                return;
+            } else {
+                document.getElementById("duplicateWarning").style.display = "none";
+                displayInvoiceData(companyName, invoiceDetails, financialDetails);
+            }
+        }
+
+        function isDuplicateInvoice(factuurnummer) {
+            return [...document.querySelectorAll("table tbody tr")].some(row => row.cells[3].innerText === factuurnummer);
+        }
+
+        function displayInvoiceData(companyName, invoiceDetails, financialDetails) {
+            const tableBody = document.querySelector(companyName.includes("Technische Unie") ? "#techTable tbody" : "#warmteTable tbody");
+            const row = `<tr>
+                    <td>${companyName}</td>
+                    <td>${invoiceDetails.datum}</td>
+                    <td>${invoiceDetails.klantNummer}</td>
+                    <td>${invoiceDetails.factuurnummer}</td>
+                    <td>${financialDetails.exclBtw.replace('.', ',')}</td>
+                    <td>${financialDetails.btw.replace('.', ',')}</td>
+                    <td>${financialDetails.inclBtw.replace('.', ',')}</td>
+                </tr>`;
+            tableBody.innerHTML += row;
+        }
+    </script>
+
+</body>
+</html>

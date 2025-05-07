@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../css/style.css">
+    <title>Benzine Verbruik Calculator</title>
+    <style>
+        
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+            display: inline-block;
+            width: 350px;
+        }
+        img {
+            width: 100px;
+            margin-bottom: 10px;
+        }
+        input {
+            width: 80%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        button {
+            background: #28a745;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #218838;
+        }
+        #resultaat {
+            margin-top: 20px;
+            font-size: 18px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Sidebar Menu -->
+<nav class="sidebar">
+    <h2>🛠 Tools Menu</h2>
+    <ul>
+        <li><a href="../index.html">🏠 Home</a></li>
+        <li><a href="../Tools/leeftijdcalc.html">🖩 Leeftijd Calculator</a></li>
+      <li><a href="../Tools/locatiecheck.html">📅 Locatie Berekenen</a></li>
+      <li><a href="../Tools/tijdmachine.html">🔢 Tijd Machine</a></li>
+      <li><a href="../Tools/benzine.html">⛽  Benzine</a></li>
+      <li><a href="../Tools/factuur.html">💰 Factuur</a></li>
+    </ul>
+</nav>
+
+    <div class="container">
+        <h2>Benzine Verbruik Calculator</h2>
+        <label>Afstand (km):</label><br>
+        <input type="number" id="afstand" placeholder="Bijv. 150"><br>
+
+        <label>Verbruik (liters per 100 km):</label><br>
+        <input type="number" id="verbruik" placeholder="Bijv. 6.5"><br>
+
+        <label>Prijs per liter (€):</label><br>
+        <input type="number" id="prijs" placeholder="Bijv. 1.85"><br>
+
+        <button onclick="berekenKosten()">Bereken</button>
+
+        <div id="resultaat"></div>
+    </div>
+
+    <script>
+        function berekenKosten() {
+            let afstand = parseFloat(document.getElementById("afstand").value);
+            let verbruik = parseFloat(document.getElementById("verbruik").value);
+            let prijs = parseFloat(document.getElementById("prijs").value);
+
+            if (isNaN(afstand) || isNaN(verbruik) || isNaN(prijs) || afstand <= 0 || verbruik <= 0 || prijs <= 0) {
+                document.getElementById("resultaat").innerHTML = "<span style='color:red;'>Voer geldige waarden in!</span>";
+                return;
+            }
+
+            let totaalVerbruik = (afstand / 100) * verbruik;
+            let totaleKosten = totaalVerbruik * prijs;
+
+            document.getElementById("resultaat").innerHTML = `
+                <p>Totaal verbruik: <strong>${totaalVerbruik.toFixed(2)} liter</strong></p>
+                <p>Totale kosten: <strong>€${totaleKosten.toFixed(2)}</strong></p>
+            `;
+        }
+    </script>
+
+</body>
+</html>

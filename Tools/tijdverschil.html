@@ -2,27 +2,156 @@
 <html lang="nl">
 <head>
   <meta charset="UTF-8">
-  <title>Tijdverschillen</title>
+  <title>Zomer-/Wintertijd Compact</title>
   <link rel="stylesheet" href="../css/style.css">
   <style>
-    /* Specifieke styling voor de tijd-hit lijst */
-    .tijd-list li {
-      background: #e2e2e2;
-      margin: 10px 0;
-      padding: 10px;
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #f2f7fb;
+      color: #333;
+      padding: 20px;
+      max-width: 900px;
+      margin: auto;
+      font-size: 14px;
+    }
+
+    h2 {
+      text-align: center;
+      color: #007acc;
+      font-size: 20px;
+      margin-bottom: 20px;
+    }
+
+    label {
+      font-weight: bold;
+      margin-top: 10px;
+      display: block;
+    }
+
+    input[type="time"],
+    input[type="number"] {
+      padding: 6px;
+      font-size: 14px;
+      margin-top: 4px;
+      border: 1px solid #ccc;
       border-radius: 4px;
+      width: 140px;
+    }
+
+    .input-row {
+      display: flex;
+      gap: 20px;
+      align-items: center;
+      margin-top: 10px;
+      justify-content: center;
+    }
+
+    .container {
+      display: flex;
+      gap: 12px;
+      margin-top: 20px;
+      justify-content: space-between;
+      flex-wrap: wrap;
+    }
+
+    .box {
+      flex: 1 1 44%;
+      background: #ffffff;
+      border: 1px solid #d0e4f1;
+      border-radius: 8px;
+      padding: 15px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+      min-width: 280px;
+    }
+
+    .box h3 {
+      margin-top: 0;
+      font-size: 16px;
+    }
+
+    .tijd {
+      font-size: 18px;
+      margin: 8px 0;
+      font-weight: bold;
+      color: #222;
+      text-decoration: underline;
+    }
+
+    .periode {
+      margin-top: 12px;
+      background-color: #ffe799;
+      border-left: 5px solid #ffbb33;
+      padding: 10px 12px;
+      border-radius: 6px;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .winter .periode {
+      background-color: #d9ecff;
+      border-left-color: #3399ff;
+    }
+
+    .datum-label {
+      font-weight: bold;
+      display: inline-block;
+      width: 100px;
+      color: #555;
+    }
+
+    .datum-waarde {
+      font-weight: bold;
+      color: #222;
+    }
+
+    .datum-extra {
+      display: block;
+      font-style: italic;
+      font-size: 12px;
+      color: #666;
+      margin-left: 100px;
+      margin-top: -4px;
+    }
+
+    .periode-item {
+      margin-bottom: 8px;
+    }
+
+    .periode-item::before {
+      content: "📅";
+      margin-right: 6px;
+      font-size: 1em;
+    }
+
+    .periode h4 {
+      font-size: 14px;
+      margin-bottom: 6px;
+      margin-top: 0;
+      color: #333;
+    }
+
+    .zomer h3 {
+      color: #ff9900;
+    }
+
+    .winter h3 {
+      color: #007acc;
+    }
+
+    @media (max-width: 600px) {
+      .container {
+        flex-direction: column;
+        gap: 20px;
+      }
+
+      .box {
+        flex: 1 1 100%;
+      }
     }
   </style>
 </head>
 <body>
-  <div class="container-tijd">
-    <h1> Tijd verschil berekenen</h1>
-    <p>Selecteer een tekstbestand met de tijd-data:</p>
-    <input type="file" id="fileInput" accept=".txt">
-    <div id="output"></div>
-  </div>
 
-  <!-- Sidebar Menu -->
   <nav class="sidebar">
     <h2>🛠 Tools Menu</h2>
     <ul>
@@ -30,11 +159,116 @@
       <li><a href="../Tools/leeftijdcalc.html">🖩 Leeftijd Calculator</a></li>
       <li><a href="../Tools/locatiecheck.html">📅 Locatie Berekenen</a></li>
       <li><a href="../Tools/tijdmachine.html">🔢 Tijd machine</a></li>
-      <li><a href="../Tools/tijdverschil.html">⏰ Tijdverschil</a></li>
+      <li><a href="Tools/tijdverschil.html">⏰ Tijdverschil</a></li>
     </ul>
   </nav>
 
-  <!-- Laad het externe script -->
-  <script src="../scripts/Tijd.js"></script>
+  <h2>UTC naar Zomer-/Wintertijd</h2>
+
+  <div class="input-row">
+    <div>
+      <label for="utc">UTC(+0) Tijd:</label>
+      <input type="time" id="utc" oninput="berekenTijden()" />
+    </div>
+    <div>
+      <label for="jaar">Jaar:</label>
+      <input type="number" id="jaar" value="2025" min="2000" max="2100" oninput="berekenTijden()" />
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="box zomer">
+      <h3>🌞 Zomertijd (UTC+2)</h3>
+      <div class="tijd" id="zomerTijd">--:--</div>
+      <div class="periode">
+        <h4>🟡 Zomertijdperiode</h4>
+        <div class="periode-item">
+          <span class="datum-label">Begint op:</span>
+          <span class="datum-waarde" id="zomerStart">--</span>
+          <span class="datum-extra" id="zomerStartKort">--</span>
+        </div>
+        <div class="periode-item">
+          <span class="datum-label">Eindigt op:</span>
+          <span class="datum-waarde" id="zomerEind">--</span>
+          <span class="datum-extra" id="zomerEindKort">--</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="box winter">
+      <h3>❄️ Wintertijd (UTC+1)</h3>
+      <div class="tijd" id="winterTijd">--:--</div>
+      <div class="periode">
+        <h4>🔵 Wintertijdperiode</h4>
+        <div class="periode-item">
+          <span class="datum-label">Begint op:</span>
+          <span class="datum-waarde" id="winterStart">--</span>
+          <span class="datum-extra" id="winterStartKort">--</span>
+        </div>
+        <div class="periode-item">
+          <span class="datum-label">Eindigt op:</span>
+          <span class="datum-waarde" id="winterEind">--</span>
+          <span class="datum-extra" id="winterEindKort">--</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function zomertijdPeriodes(jaar) {
+      const maart = new Date(jaar, 2, 31);
+      maart.setDate(maart.getDate() - maart.getDay());
+
+      const oktober = new Date(jaar, 9, 31);
+      oktober.setDate(oktober.getDate() - oktober.getDay());
+
+      const volgendJaarMaart = new Date(jaar + 1, 2, 31);
+      volgendJaarMaart.setDate(volgendJaarMaart.getDate() - volgendJaarMaart.getDay());
+
+      return {
+        zomer: { start: maart, eind: oktober },
+        winter: { start: oktober, eind: volgendJaarMaart }
+      };
+    }
+
+    function formatDatum(d) {
+      return d.toLocaleDateString('nl-NL', {
+        weekday: 'long', day: '2-digit', month: 'long', year: 'numeric'
+      });
+    }
+
+    function formatKort(d) {
+      return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
+    }
+
+    function pad(n) {
+      return n < 10 ? "0" + n : n;
+    }
+
+    function berekenTijden() {
+      const tijd = document.getElementById("utc").value;
+      const jaar = parseInt(document.getElementById("jaar").value);
+      if (!tijd || isNaN(jaar)) return;
+
+      const [uur, minuut] = tijd.split(":").map(Number);
+      const { zomer, winter } = zomertijdPeriodes(jaar);
+
+      const zomerUur = (uur + 2) % 24;
+      const winterUur = (uur + 1) % 24;
+
+      document.getElementById("zomerTijd").innerText = `${pad(zomerUur)}:${pad(minuut)}`;
+      document.getElementById("winterTijd").innerText = `${pad(winterUur)}:${pad(minuut)}`;
+
+      document.getElementById("zomerStart").innerText = formatDatum(zomer.start);
+      document.getElementById("zomerStartKort").innerText = formatKort(zomer.start);
+      document.getElementById("zomerEind").innerText = formatDatum(zomer.eind);
+      document.getElementById("zomerEindKort").innerText = formatKort(zomer.eind);
+
+      document.getElementById("winterStart").innerText = formatDatum(winter.start);
+      document.getElementById("winterStartKort").innerText = formatKort(winter.start);
+      document.getElementById("winterEind").innerText = formatDatum(winter.eind);
+      document.getElementById("winterEindKort").innerText = formatKort(winter.eind);
+    }
+  </script>
 </body>
 </html>
